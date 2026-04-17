@@ -196,10 +196,15 @@ section[data-testid="stSidebar"] .block-container { padding-top: 1.2rem; }
 /* ── Hide Streamlit chrome ── */
 #MainMenu { display: none !important; }
 footer { display: none !important; }
-header { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
 [data-testid="stDecoration"] { display: none !important; }
 [data-testid="stStatusWidget"] { display: none !important; }
+/* Hide header bar but keep sidebar toggle visible on mobile */
+[data-testid="stHeader"] { background: transparent !important; }
+[data-testid="stHeader"]::before { display: none !important; }
+/* Always show the sidebar open/close arrow */
+[data-testid="stSidebarCollapsedControl"] { display: flex !important; visibility: visible !important; }
+[data-testid="collapsedControl"] { display: flex !important; visibility: visible !important; }
 
 /* ── Tab styling override ── */
 button[data-baseweb="tab"] { font-size:.84rem !important; font-weight:600 !important; }
