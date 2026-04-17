@@ -193,6 +193,14 @@ section[data-testid="stSidebar"] .block-container { padding-top: 1.2rem; }
 .sb-title { font-size:.72rem; font-weight:700; color:#a5b4fc; letter-spacing:.1em;
             text-transform:uppercase; margin-bottom:10px; }
 
+/* ── Hide Streamlit chrome ── */
+#MainMenu { display: none !important; }
+footer { display: none !important; }
+header { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
+[data-testid="stDecoration"] { display: none !important; }
+[data-testid="stStatusWidget"] { display: none !important; }
+
 /* ── Tab styling override ── */
 button[data-baseweb="tab"] { font-size:.84rem !important; font-weight:600 !important; }
 
