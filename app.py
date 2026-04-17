@@ -465,33 +465,54 @@ model = load_model()
 
 
 # ════════════════════════════════════════════════════════════════════════════════
-# SIDEBAR
+# INPUT PANEL — inline expander (works on desktop + mobile, no sidebar needed)
 # ════════════════════════════════════════════════════════════════════════════════
-with st.sidebar:
-    st.markdown("### 🎓 Student Data")
-    st.caption("All predictions update live as you move sliders.")
+st.markdown("""
+<style>
+/* Style the expander to match dark theme */
+[data-testid="stExpander"] {
+  background: linear-gradient(145deg,#0d0f1c,#080910) !important;
+  border: 1px solid rgba(165,180,252,.2) !important;
+  border-radius: 16px !important;
+  margin-bottom: 18px;
+}
+[data-testid="stExpander"] summary {
+  font-size: .9rem !important; font-weight: 700 !important;
+  color: #a5b4fc !important; padding: 14px 18px !important;
+}
+[data-testid="stExpanderDetails"] { padding: 0 18px 16px !important; }
+/* Hide sidebar entirely since inputs are inline */
+section[data-testid="stSidebar"] { display: none !important; }
+[data-testid="stSidebarCollapsedControl"] { display: none !important; }
+[data-testid="collapsedControl"] { display: none !important; }
+</style>
+""", unsafe_allow_html=True)
 
-    st.markdown('<div class="sb-section"><div class="sb-title">Previous Test Marks</div>', unsafe_allow_html=True)
-    m1 = st.slider("Test 1 — oldest", 0, 100, 55)
-    m2 = st.slider("Test 2 — middle", 0, 100, 62)
-    m3 = st.slider("Test 3 — latest", 0, 100, 68)
-    st.markdown("</div>", unsafe_allow_html=True)
+with st.expander("🎓  Enter Your Study Data — tap to open", expanded=False):
+    st.caption("All predictions update live as you adjust the sliders.")
 
-    st.markdown('<div class="sb-section"><div class="sb-title">Daily Study Hours (last 7 days)</div>', unsafe_allow_html=True)
-    days     = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-    defaults = [3.0, 3.5, 2.5, 4.0, 3.0, 5.0, 2.0]
-    daily_hours = [st.slider(d, 0.0, 10.0, dfl, 0.5, key=f"h_{d}") for d,dfl in zip(days,defaults)]
-    st.markdown("</div>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown('<div class="sb-title" style="color:#a5b4fc;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Previous Test Marks</div>', unsafe_allow_html=True)
+        m1 = st.slider("Test 1 — oldest", 0, 100, 55)
+        m2 = st.slider("Test 2 — middle", 0, 100, 62)
+        m3 = st.slider("Test 3 — latest", 0, 100, 68)
 
-    st.markdown('<div class="sb-section"><div class="sb-title">Study Quality</div>', unsafe_allow_html=True)
-    focused_time     = st.slider("Focused Study Time (hrs/day)", 0.0, 8.0, 2.0, 0.5)
-    revision_freq    = st.slider("Revision Sessions / Week",     0,   10,  3)
-    distraction      = st.slider("Distraction Level (0–10)",     0.0, 10.0,4.0, 0.5)
-    subject_strength = st.slider("Subject Strength (1–10)",      1.0, 10.0,6.0, 0.5)
-    st.markdown("</div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown('<div class="sb-title" style="color:#a5b4fc;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Daily Study Hours (last 7 days)</div>', unsafe_allow_html=True)
+        days     = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+        defaults = [3.0, 3.5, 2.5, 4.0, 3.0, 5.0, 2.0]
+        daily_hours = [st.slider(d, 0.0, 10.0, dfl, 0.5, key=f"h_{d}") for d,dfl in zip(days,defaults)]
+
+    with c3:
+        st.markdown('<div class="sb-title" style="color:#a5b4fc;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Study Quality</div>', unsafe_allow_html=True)
+        focused_time     = st.slider("Focused Study Time (hrs/day)", 0.0, 8.0, 2.0, 0.5)
+        revision_freq    = st.slider("Revision Sessions / Week",     0,   10,  3)
+        distraction      = st.slider("Distraction Level (0–10)",     0.0, 10.0,4.0, 0.5)
+        subject_strength = st.slider("Subject Strength (1–10)",      1.0, 10.0,6.0, 0.5)
 
     st.markdown(
-        f"<div style='text-align:center;padding:10px 0 0'>"
+        f"<div style='text-align:center;padding:8px 0 0'>"
         f"<span style='font-size:.7rem;color:#475569'>Model: <b style='color:#818cf8'>{model.best_model_name}</b> · "
         f"R²={model.r2:.3f} · MAE≈{model.mae:.1f}</span></div>",
         unsafe_allow_html=True,
