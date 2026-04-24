@@ -499,10 +499,10 @@ with st.expander("🎓  Enter Your Study Data — tap to open", expanded=False):
         m3 = st.slider("Test 3 — latest", 0, 100, 68)
 
     with c2:
-        st.markdown('<div class="sb-title" style="color:#a5b4fc;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Daily Study Hours (last 7 days)</div>', unsafe_allow_html=True)
-        days     = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-        defaults = [3.0, 3.5, 2.5, 4.0, 3.0, 5.0, 2.0]
-        daily_hours = [st.slider(d, 0.0, 10.0, dfl, 0.5, key=f"h_{d}") for d,dfl in zip(days,defaults)]
+        st.markdown('<div class="sb-title" style="color:#a5b4fc;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Avg Study Hours/Day — by Week</div>', unsafe_allow_html=True)
+        weeks    = ["Week 1", "Week 2", "Week 3", "Week 4"]
+        defaults = [3.0, 3.5, 4.0, 5.0]
+        daily_hours = [st.slider(w, 0.0, 10.0, dfl, 0.5, key=f"h_{w}") for w,dfl in zip(weeks,defaults)]
 
     with c3:
         st.markdown('<div class="sb-title" style="color:#a5b4fc;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Study Quality</div>', unsafe_allow_html=True)
@@ -867,10 +867,10 @@ window.addEventListener('resize', function() {{
     left, right = st.columns(2)
 
     with left:
-        st.markdown(animated_header("Weekly Study Hours"), unsafe_allow_html=True)
-        hours_df = pd.DataFrame({"Day": days, "Hours": daily_hours})
+        st.markdown(animated_header("Study Hours by Week"), unsafe_allow_html=True)
+        hours_df = pd.DataFrame({"Week": weeks, "Hours": daily_hours})
         st.markdown('<div class="chart-box">', unsafe_allow_html=True)
-        st.altair_chart(bar_chart(hours_df, "Day", "Hours", "#6366f1", h=210),
+        st.altair_chart(bar_chart(hours_df, "Week", "Hours", "#6366f1", h=210),
                         use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1083,7 +1083,7 @@ with tab4:
         wif_subject  = st.slider("Subject Strength",  1.0, 10.0, subject_strength,           0.5, key="wif_s")
 
     wif_features = engineer_features(
-        [m1,m2,m3], [wif_hours]*7, wif_focused, wif_revision, wif_distract, wif_subject,
+        [m1,m2,m3], [wif_hours]*4, wif_focused, wif_revision, wif_distract, wif_subject,
     )
     wif_result = model.predict(wif_features)
     wif_grade, wif_grade_label = get_grade(wif_result["predicted_marks"])
