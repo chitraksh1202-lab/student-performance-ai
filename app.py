@@ -5,6 +5,7 @@ AI Student Performance Analyzer — Streamlit App
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
+import base64
 import streamlit as st
 import streamlit.components.v1 as components
 import numpy as np
@@ -17,9 +18,14 @@ from utils.suggestions import (
 )
 
 # ── Page config ───────────────────────────────────────────────────────────────
+_logo_path = os.path.join(os.path.dirname(__file__), "logo.svg")
+with open(_logo_path, "rb") as _f:
+    _logo_b64 = base64.b64encode(_f.read()).decode()
+_logo_data_uri = f"data:image/svg+xml;base64,{_logo_b64}"
+
 st.set_page_config(
     page_title="Student Performance AI",
-    page_icon="🎓",
+    page_icon=_logo_path,
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -486,6 +492,22 @@ section[data-testid="stSidebar"] { display: none !important; }
 [data-testid="stSidebarCollapsedControl"] { display: none !important; }
 [data-testid="collapsedControl"] { display: none !important; }
 </style>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+<div style="display:flex;align-items:center;gap:18px;margin-bottom:4px;">
+  <img src="{_logo_data_uri}" width="72" height="72"
+       style="filter:drop-shadow(0 0 12px rgba(99,102,241,0.55));flex-shrink:0"/>
+  <div>
+    <div style="font-size:1.45rem;font-weight:800;color:#e2e8f0;line-height:1.2;">
+      Student Performance <span style="background:linear-gradient(90deg,#a5b4fc,#fda4af);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">AI</span>
+    </div>
+    <div style="font-size:.78rem;color:#475569;margin-top:3px;letter-spacing:.05em;">
+      Behavioral analytics · ML-powered exam prediction
+    </div>
+  </div>
+</div>
 """, unsafe_allow_html=True)
 
 with st.expander("🎓  Enter Your Study Data — tap to open", expanded=False):
