@@ -524,7 +524,7 @@ with st.expander("🎓  Enter Your Study Data — tap to open", expanded=False):
         st.markdown('<div class="sb-title" style="color:#a5b4fc;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Avg Study Hours/Day — by Week</div>', unsafe_allow_html=True)
         weeks    = ["Week 1", "Week 2", "Week 3", "Week 4"]
         defaults = [3.0, 3.5, 4.0, 5.0]
-        daily_hours = [st.slider(w, 0.0, 10.0, dfl, 0.5, key=f"h_{w}") for w,dfl in zip(weeks,defaults)]
+        daily_hours = [st.slider(w, 0.0, 14.5, dfl, 0.5, key=f"h_{w}") for w,dfl in zip(weeks,defaults)]
 
     with c3:
         st.markdown('<div class="sb-title" style="color:#a5b4fc;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Study Quality</div>', unsafe_allow_html=True)
