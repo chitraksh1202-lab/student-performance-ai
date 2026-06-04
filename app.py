@@ -1218,8 +1218,8 @@ HERO_ASCII_HTML = """
   html,body{width:100%;height:100%;overflow:hidden;background:#000;
             font-family:'Courier New',Courier,monospace;color:#fff;}
 
-  /* Background animation (left 60%) */
-  #us-bg{position:absolute;top:0;left:0;width:60%;height:100%;overflow:hidden;}
+  /* Background animation (full background, centered) */
+  #us-bg{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;}
 
   /* Mobile fallback: star field */
   #stars{
@@ -1258,12 +1258,15 @@ HERO_ASCII_HTML = """
   .c-bl{bottom:32px;left:0;border-bottom:2px solid rgba(255,255,255,.28);border-left:2px solid rgba(255,255,255,.28);}
   .c-br{bottom:32px;right:0;border-bottom:2px solid rgba(255,255,255,.28);border-right:2px solid rgba(255,255,255,.28);}
 
-  /* Right content panel */
+  /* Center content panel over animation */
   #panel{
-    position:absolute;top:0;right:0;width:50%;height:calc(100% - 32px);
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:min(520px,90%);height:calc(100% - 32px);
     display:flex;flex-direction:column;justify-content:center;
-    padding:0 48px 0 32px;
-    background:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.55) 30%,rgba(0,0,0,.82) 100%);
+    padding:0 32px;
+    background:rgba(0,0,0,.55);
+    backdrop-filter:blur(2px);
+    text-align:center;align-items:center;
   }
 
   /* Decorative line */
@@ -1327,10 +1330,7 @@ HERO_ASCII_HTML = """
 
   /* Responsive */
   @media(max-width:640px){
-    #us-bg{width:100%;height:55%;}
-    #panel{position:relative;top:auto;right:auto;width:100%;height:auto;
-           padding:16px;background:rgba(0,0,0,.7);
-           margin-top:calc(55% - 32px);}
+    #panel{width:92%;padding:0 16px;}
     #main-title{font-size:1.25rem;white-space:normal;}
     #desc{font-size:.68rem;margin-bottom:12px;}
     .hdr-coords{display:none;}
@@ -1450,18 +1450,20 @@ HERO_ASCII_HTML = """
   }
 }();
 
-// Hide any branding that loads inside the canvas container
-var _hb=function(){
-  document.querySelectorAll('[data-us-project] *').forEach(function(el){
-    var t=(el.textContent||'').toLowerCase();
+// Aggressively remove UnicornStudio branding
+function _hb(){
+  document.querySelectorAll('a,span,div,p').forEach(function(el){
+    var t=(el.textContent||'').toLowerCase().trim();
     var h=(el.getAttribute('href')||'').toLowerCase();
-    if(t.includes('made with')||t.includes('unicorn')||h.includes('unicorn.studio')){
-      el.style.cssText='display:none!important;visibility:hidden!important;';
+    if(t.includes('made with')||t.includes('unicorn')||h.includes('unicorn.studio')||h.includes('unicornstudio')){
+      el.style.cssText='display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;';
       try{el.remove();}catch(e){}
     }
   });
-};
-[0,500,1500,3000,6000].forEach(function(d){setTimeout(_hb,d);});
+}
+[0,300,800,1500,3000,5000,8000].forEach(function(d){setTimeout(_hb,d);});
+var _obs=new MutationObserver(_hb);
+_obs.observe(document.body,{childList:true,subtree:true});
 </script>
 </body>
 </html>
