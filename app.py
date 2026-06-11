@@ -6,6 +6,8 @@ import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
 import base64
+import uuid
+from datetime import date, datetime as _dt
 import streamlit as st
 import streamlit.components.v1 as components
 import numpy as np
@@ -253,6 +255,74 @@ button[data-baseweb="tab"] { font-size:.84rem !important; font-weight:600 !impor
   .anim-hd-text { font-size: .72rem; }
   button[data-baseweb="tab"] { font-size:.72rem !important; padding: 6px 8px !important; }
 }
+
+/* ── Login page ── */
+.login-outer {
+  min-height: 60vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 20px 16px;
+}
+.login-logo-row {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; margin-bottom: 28px; text-align: center;
+}
+.login-app-name {
+  font-size: 2.2rem; font-weight: 900; letter-spacing: .06em;
+  background: linear-gradient(90deg, #a5b4fc, #fda4af);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.login-tagline { font-size: .82rem; color: #475569; letter-spacing: .04em; }
+.login-card {
+  width: 100%;
+  background: linear-gradient(145deg, #0d0f1c, #080910);
+  border: 1px solid rgba(165,180,252,.22); border-radius: 20px;
+  padding: 32px 28px; box-shadow: 0 8px 40px rgba(0,0,0,.55);
+}
+.login-card-title  { font-size: 1rem; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; }
+.login-note { font-size: .68rem; color: #334155; text-align: center; margin-top: 14px; }
+
+/* ── Profile badge (header) ── */
+.profile-badge {
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(145deg, #0d0f1c, #080910);
+  border: 1px solid rgba(165,180,252,.18); border-radius: 12px; padding: 10px 14px;
+}
+.profile-name { font-size: .85rem; font-weight: 700; color: #e2e8f0; }
+.profile-usn  { font-size: .67rem; color: #818cf8; letter-spacing: .06em; }
+.profile-meta { font-size: .63rem; color: #475569; }
+
+/* ── Assignment tab ── */
+.asgn-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px;
+}
+.asgn-stat {
+  background: linear-gradient(145deg,#0d0f1c,#080910);
+  border: 1px solid rgba(165,180,252,.15); border-radius: 14px;
+  padding: 16px 14px; text-align: center;
+}
+.asgn-stat-val { font-size: 1.8rem; font-weight: 800; color: #f1f5f9; line-height: 1.2; }
+.asgn-stat-lbl { font-size: .62rem; color: #475569; letter-spacing: .1em;
+                 text-transform: uppercase; margin-top: 4px; }
+.asgn-card {
+  background: linear-gradient(145deg,#0d0f1c,#080910);
+  border: 1px solid rgba(165,180,252,.12); border-radius: 14px;
+  padding: 16px 18px; margin-bottom: 10px;
+}
+.asgn-title   { font-size: .95rem; font-weight: 700; color: #e2e8f0; }
+.asgn-subject { font-size: .74rem; color: #64748b; margin-top: 2px; }
+.asgn-due     { font-size: .72rem; margin-top: 8px; }
+.badge-sm { font-size:.63rem; font-weight:700; padding:2px 9px;
+            border-radius:100px; letter-spacing:.05em; }
+.pri-high    { background:rgba(239,68,68,.18);  color:#f87171; border:1px solid rgba(239,68,68,.3); }
+.pri-medium  { background:rgba(245,158,11,.18); color:#fbbf24; border:1px solid rgba(245,158,11,.3); }
+.pri-low     { background:rgba(34,197,94,.18);  color:#4ade80; border:1px solid rgba(34,197,94,.3); }
+.sta-pending    { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.25); }
+.sta-inprogress { background:rgba(99,102,241,.15); color:#a5b4fc; border:1px solid rgba(99,102,241,.25); }
+.sta-completed  { background:rgba(34,197,94,.12);  color:#4ade80; border:1px solid rgba(34,197,94,.22); }
+
+@media(max-width:680px) {
+  .asgn-grid  { grid-template-columns: repeat(2,1fr); }
+  .login-card { padding: 24px 18px; }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -293,6 +363,61 @@ st.markdown("""
   backdrop-filter:blur(2px);pointer-events:none;
   animation:sf5 22s ease-in-out 1.5s infinite;"></div>
 """, unsafe_allow_html=True)
+
+
+# ── Session state init ────────────────────────────────────────────────────────
+if "logged_in"       not in st.session_state: st.session_state.logged_in      = False
+if "student_name"    not in st.session_state: st.session_state.student_name   = ""
+if "student_usn"     not in st.session_state: st.session_state.student_usn    = ""
+if "student_sem"     not in st.session_state: st.session_state.student_sem    = ""
+if "student_branch"  not in st.session_state: st.session_state.student_branch = ""
+if "assignments"     not in st.session_state: st.session_state.assignments    = []
+if "edit_asgn_id"    not in st.session_state: st.session_state.edit_asgn_id   = None
+
+
+# ── Login page ────────────────────────────────────────────────────────────────
+if not st.session_state.logged_in:
+    st.markdown(f"""
+    <div class="login-outer">
+      <div class="login-logo-row">
+        <img src="{_logo_data_uri}" width="68" height="68"
+             style="filter:drop-shadow(0 0 14px rgba(99,102,241,.6))"/>
+        <div class="login-app-name">PrepPulse</div>
+        <div class="login-tagline">Track your preparation. Estimate your performance.</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    _, _lc, _ = st.columns([1, 1.4, 1])
+    with _lc:
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown('<div class="login-card-title">Student Login</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:.73rem;color:#475569;margin-bottom:18px">Enter your details to continue</div>', unsafe_allow_html=True)
+
+        with st.form("login_form", clear_on_submit=False):
+            _name   = st.text_input("Student Name *", placeholder="Full name")
+            _usn    = st.text_input("USN *", placeholder="e.g. 1RV22CS001")
+            _sem    = st.selectbox("Semester", ["(Skip)","1st","2nd","3rd","4th","5th","6th","7th","8th"])
+            _branch = st.text_input("Branch", placeholder="e.g. CSE, ECE, ME (optional)")
+            _go     = st.form_submit_button("Login →", use_container_width=True, type="primary")
+
+            if _go:
+                if not _name.strip():
+                    st.error("Student Name is required.")
+                elif not _usn.strip():
+                    st.error("USN is required.")
+                else:
+                    st.session_state.logged_in     = True
+                    st.session_state.student_name  = _name.strip()
+                    st.session_state.student_usn   = _usn.strip().upper()
+                    st.session_state.student_sem   = "" if _sem == "(Skip)" else _sem
+                    st.session_state.student_branch = _branch.strip()
+                    st.rerun()
+
+        st.markdown('<div class="login-note">Basic student login for project demo</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.stop()
 
 
 # ── Altair chart helpers ──────────────────────────────────────────────────────
@@ -494,21 +619,45 @@ section[data-testid="stSidebar"] { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown(f"""
-<div style="display:flex;align-items:center;gap:18px;margin-bottom:4px;">
-  <img src="{_logo_data_uri}" width="72" height="72"
-       style="filter:drop-shadow(0 0 12px rgba(99,102,241,0.55));flex-shrink:0"/>
-  <div>
-    <div style="font-size:1.45rem;font-weight:800;color:#e2e8f0;line-height:1.2;">
-      Student Performance <span style="background:linear-gradient(90deg,#a5b4fc,#fda4af);
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">AI</span>
+_hdr_l, _hdr_r = st.columns([3, 1])
+with _hdr_l:
+    st.markdown(f"""
+    <div style="display:flex;align-items:center;gap:18px;margin-bottom:4px;">
+      <img src="{_logo_data_uri}" width="72" height="72"
+           style="filter:drop-shadow(0 0 12px rgba(99,102,241,0.55));flex-shrink:0"/>
+      <div>
+        <div style="font-size:1.45rem;font-weight:800;color:#e2e8f0;line-height:1.2;">
+          PrepPulse <span style="background:linear-gradient(90deg,#a5b4fc,#fda4af);
+          -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">AI</span>
+        </div>
+        <div style="font-size:.78rem;color:#475569;margin-top:3px;letter-spacing:.05em;">
+          Behavioral analytics · ML-powered exam prediction
+        </div>
+      </div>
     </div>
-    <div style="font-size:.78rem;color:#475569;margin-top:3px;letter-spacing:.05em;">
-      Behavioral analytics · ML-powered exam prediction
+    """, unsafe_allow_html=True)
+with _hdr_r:
+    _sem_branch = " · ".join(filter(None, [st.session_state.student_sem, st.session_state.student_branch]))
+    st.markdown(f"""
+    <div class="profile-badge">
+      <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;
+           background:linear-gradient(135deg,#6366f1,#a5b4fc);
+           display:flex;align-items:center;justify-content:center;
+           font-size:1rem;font-weight:800;color:#fff;">
+        {st.session_state.student_name[0].upper()}
+      </div>
+      <div>
+        <div class="profile-name">{st.session_state.student_name}</div>
+        <div class="profile-usn">{st.session_state.student_usn}</div>
+        {f'<div class="profile-meta">{_sem_branch}</div>' if _sem_branch else ''}
+      </div>
     </div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+    if st.button("Logout", key="logout_btn", use_container_width=True):
+        for _k in ["student_name","student_usn","student_sem","student_branch"]:
+            st.session_state[_k] = ""
+        st.session_state.logged_in = False
+        st.rerun()
 
 with st.expander("🎓  Enter Your Study Data — tap to open", expanded=False):
     st.caption("All predictions update live as you adjust the sliders.")
@@ -669,12 +818,13 @@ components.html(HERO_HTML, height=260)
 # ════════════════════════════════════════════════════════════════════════════════
 # TABS
 # ════════════════════════════════════════════════════════════════════════════════
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📈  Prediction",
     "🔍  Breakdown & Insights",
     "⚙️  Model Comparison",
     "🔄  What-If Simulator",
     "📖  How It Works",
+    "📋  Assignments",
 ])
 
 
@@ -1546,5 +1696,183 @@ with tab5:
         <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(99,102,241,.1)">
           <div style="min-width:170px;font-size:.82rem;font-weight:700;color:#818cf8">{term}</div>
           <div style="font-size:.82rem;color:#94a3b8">{meaning}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 6  ·  ASSIGNMENTS
+# ─────────────────────────────────────────────────────────────────────────────
+with tab6:
+
+    _usn = st.session_state.student_usn
+
+    def _my_asgn():
+        return [a for a in st.session_state.assignments if a["student_usn"] == _usn]
+
+    def _add_asgn(title, subject, due, priority, status, notes):
+        st.session_state.assignments.append({
+            "id":          str(uuid.uuid4())[:8],
+            "student_usn": _usn,
+            "title":       title,
+            "subject":     subject,
+            "due_date":    str(due),
+            "priority":    priority,
+            "status":      status,
+            "notes":       notes,
+            "created_at":  _dt.now().strftime("%Y-%m-%d"),
+        })
+
+    def _del_asgn(aid):
+        st.session_state.assignments = [a for a in st.session_state.assignments if a["id"] != aid]
+
+    def _upd_asgn(aid, **kw):
+        for a in st.session_state.assignments:
+            if a["id"] == aid:
+                a.update(kw)
+
+    # ── Stats cards ──
+    _mine     = _my_asgn()
+    _today    = str(date.today())
+    _total    = len(_mine)
+    _pending  = sum(1 for a in _mine if a["status"] == "Pending")
+    _done     = sum(1 for a in _mine if a["status"] == "Completed")
+    _upcoming = sum(1 for a in _mine if a["status"] != "Completed" and a["due_date"] >= _today)
+
+    st.markdown(f"""
+    <div class="asgn-grid">
+      <div class="asgn-stat">
+        <div class="asgn-stat-val">{_total}</div>
+        <div class="asgn-stat-lbl">Total</div>
+      </div>
+      <div class="asgn-stat" style="border-color:rgba(245,158,11,.28)">
+        <div class="asgn-stat-val" style="color:#fbbf24">{_pending}</div>
+        <div class="asgn-stat-lbl">Pending</div>
+      </div>
+      <div class="asgn-stat" style="border-color:rgba(34,197,94,.25)">
+        <div class="asgn-stat-val" style="color:#4ade80">{_done}</div>
+        <div class="asgn-stat-lbl">Completed</div>
+      </div>
+      <div class="asgn-stat" style="border-color:rgba(99,102,241,.28)">
+        <div class="asgn-stat-val" style="color:#a5b4fc">{_upcoming}</div>
+        <div class="asgn-stat-lbl">Due Soon</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Add assignment form ──
+    with st.expander("➕  Add New Assignment", expanded=(_total == 0)):
+        with st.form("add_asgn_form", clear_on_submit=True):
+            _ac1, _ac2 = st.columns(2)
+            with _ac1:
+                _a_title   = st.text_input("Assignment Title *", placeholder="e.g. DBMS Lab Report")
+                _a_subject = st.text_input("Subject *", placeholder="e.g. Database Management")
+                _a_due     = st.date_input("Due Date", value=date.today())
+            with _ac2:
+                _a_priority = st.selectbox("Priority", ["Medium","High","Low"])
+                _a_status   = st.selectbox("Status", ["Pending","In Progress","Completed"])
+                _a_notes    = st.text_area("Notes", placeholder="Any additional details...", height=100)
+
+            if st.form_submit_button("Add Assignment", type="primary", use_container_width=True):
+                if not _a_title.strip():
+                    st.error("Title is required.")
+                elif not _a_subject.strip():
+                    st.error("Subject is required.")
+                else:
+                    _add_asgn(_a_title.strip(), _a_subject.strip(), _a_due,
+                              _a_priority, _a_status, _a_notes.strip())
+                    st.success("Assignment added!")
+                    st.rerun()
+
+    st.markdown('<hr class="divider">', unsafe_allow_html=True)
+
+    # ── Assignment list ──
+    _mine = _my_asgn()
+    if _mine:
+        _fl1, _fl2 = st.columns([3, 1])
+        with _fl1:
+            st.markdown(animated_header("Your Assignments"), unsafe_allow_html=True)
+        with _fl2:
+            _filter = st.selectbox("Filter by status", ["All","Pending","In Progress","Completed"],
+                                   key="asgn_filter", label_visibility="collapsed")
+
+        _filtered = _mine if _filter == "All" else [a for a in _mine if a["status"] == _filter]
+
+        if not _filtered:
+            st.markdown('<div style="text-align:center;color:#475569;padding:28px;font-size:.85rem">No assignments match this filter.</div>',
+                        unsafe_allow_html=True)
+
+        for _a in sorted(_filtered, key=lambda x: x["due_date"]):
+            if st.session_state.edit_asgn_id == _a["id"]:
+                # ── Edit form ──
+                with st.form(f"edit_{_a['id']}"):
+                    _ec1, _ec2 = st.columns(2)
+                    with _ec1:
+                        _et = st.text_input("Title",   value=_a["title"])
+                        _es = st.text_input("Subject", value=_a["subject"])
+                        _ed = st.date_input("Due Date", value=date.fromisoformat(_a["due_date"]))
+                    with _ec2:
+                        _ep = st.selectbox("Priority", ["Medium","High","Low"],
+                                           index=["Medium","High","Low"].index(_a["priority"]))
+                        _est = st.selectbox("Status", ["Pending","In Progress","Completed"],
+                                            index=["Pending","In Progress","Completed"].index(_a["status"]))
+                        _en = st.text_area("Notes", value=_a["notes"], height=80)
+                    _sc1, _sc2 = st.columns(2)
+                    with _sc1:
+                        if st.form_submit_button("Save", type="primary", use_container_width=True):
+                            _upd_asgn(_a["id"], title=_et, subject=_es, due_date=str(_ed),
+                                      priority=_ep, status=_est, notes=_en)
+                            st.session_state.edit_asgn_id = None
+                            st.rerun()
+                    with _sc2:
+                        if st.form_submit_button("Cancel", use_container_width=True):
+                            st.session_state.edit_asgn_id = None
+                            st.rerun()
+            else:
+                # ── Assignment card ──
+                _pri_cls = {"High":"pri-high","Medium":"pri-medium","Low":"pri-low"}[_a["priority"]]
+                _sta_cls = {"Pending":"sta-pending","In Progress":"sta-inprogress","Completed":"sta-completed"}[_a["status"]]
+                _overdue = _a["due_date"] < _today and _a["status"] != "Completed"
+                _due_col = "#f87171" if _overdue else "#64748b"
+                _due_lbl = f"Due: {_a['due_date']}" + (" — Overdue" if _overdue else "")
+                _notes_html = f'<div style="font-size:.74rem;color:#64748b;margin-top:6px">{_a["notes"]}</div>' if _a["notes"] else ""
+
+                st.markdown(f"""
+                <div class="asgn-card">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+                    <div>
+                      <div class="asgn-title">{_a['title']}</div>
+                      <div class="asgn-subject">{_a['subject']}</div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                      <span class="badge-sm {_pri_cls}">{_a['priority']}</span>
+                      <span class="badge-sm {_sta_cls}">{_a['status']}</span>
+                    </div>
+                  </div>
+                  <div class="asgn-due" style="color:{_due_col}">{_due_lbl}</div>
+                  {_notes_html}
+                </div>
+                """, unsafe_allow_html=True)
+
+                _bc1, _bc2, _bc3 = st.columns([1, 1, 1])
+                with _bc1:
+                    if _a["status"] != "Completed":
+                        if st.button("✓ Mark Done", key=f"done_{_a['id']}", use_container_width=True):
+                            _upd_asgn(_a["id"], status="Completed")
+                            st.rerun()
+                with _bc2:
+                    if st.button("✏ Edit", key=f"edit_{_a['id']}", use_container_width=True):
+                        st.session_state.edit_asgn_id = _a["id"]
+                        st.rerun()
+                with _bc3:
+                    if st.button("🗑 Delete", key=f"del_{_a['id']}", use_container_width=True):
+                        _del_asgn(_a["id"])
+                        st.rerun()
+    else:
+        st.markdown("""
+        <div style="text-align:center;padding:48px 20px">
+          <div style="font-size:2.2rem;margin-bottom:12px">📋</div>
+          <div style="font-size:.92rem;font-weight:600;color:#64748b">No assignments yet</div>
+          <div style="font-size:.78rem;color:#475569;margin-top:5px">Add your first assignment using the form above</div>
         </div>
         """, unsafe_allow_html=True)
